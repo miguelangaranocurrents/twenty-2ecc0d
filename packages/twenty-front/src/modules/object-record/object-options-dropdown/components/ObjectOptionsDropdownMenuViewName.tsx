@@ -8,7 +8,6 @@ import { useAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useAtomC
 import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue';
 import { useSetAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useSetAtomComponentState';
 import { type View } from '@/views/types/View';
-import { useUpdateViewFromCurrentState } from '@/views/view-picker/hooks/useUpdateViewFromCurrentState';
 import { viewPickerIsDirtyComponentState } from '@/views/view-picker/states/viewPickerIsDirtyComponentState';
 import { viewPickerIsPersistingComponentState } from '@/views/view-picker/states/viewPickerIsPersistingComponentState';
 import { viewPickerSelectedIconComponentState } from '@/views/view-picker/states/viewPickerSelectedIconComponentState';
@@ -74,7 +73,6 @@ export const ObjectOptionsDropdownMenuViewName = ({
   const { setAndPersistViewName, setAndPersistViewIcon } =
     useUpdateObjectViewOptions();
 
-  const { updateViewFromCurrentState } = useUpdateViewFromCurrentState();
   const [viewName, setViewName] = useState(currentView?.name);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -82,15 +80,20 @@ export const ObjectOptionsDropdownMenuViewName = ({
 
   useHotkeysOnFocusedElement({
     keys: [Key.Enter],
-    callback: async () => {
+    callback: () => {
       if (viewPickerIsPersisting) {
         return;
       }
 
-      await updateViewFromCurrentState();
+      setAndPersistViewName(viewName, currentView);
     },
     focusId: dropdownId,
-    dependencies: [viewPickerIsPersisting, updateViewFromCurrentState],
+    dependencies: [
+      viewPickerIsPersisting,
+      setAndPersistViewName,
+      viewName,
+      currentView,
+    ],
   });
 
   const handleIconChange = ({ iconKey }: { iconKey: string }) => {

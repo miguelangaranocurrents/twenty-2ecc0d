@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 
 import { LightCopyIconButton } from '@/object-record/record-field/ui/components/LightCopyIconButton';
 import { useRegisterInputEvents } from '@/object-record/record-field/ui/meta-types/input/hooks/useRegisterInputEvents';
+import { turnIntoEmptyStringIfWhitespacesOnly } from '~/utils/string/turnIntoEmptyStringIfWhitespacesOnly';
 import { themeCssVariables } from 'twenty-ui/theme';
 
 export const StyledTextInput = styled.input`
@@ -43,17 +44,8 @@ export type TextInputProps = {
   onClickOutside?: (event: MouseEvent | TouchEvent, inputValue: string) => void;
   onChange?: (newText: string) => void;
   copyButton?: boolean;
-  shouldTrim?: boolean;
   disabled?: boolean;
   className?: string;
-};
-
-const getValue = (value: string, shouldTrim: boolean) => {
-  if (shouldTrim) {
-    return value.trim();
-  }
-
-  return value;
 };
 
 export const TextInput = ({
@@ -69,7 +61,6 @@ export const TextInput = ({
   onClickOutside,
   onChange,
   copyButton = true,
-  shouldTrim = true,
   disabled,
   className,
 }: TextInputProps) => {
@@ -78,13 +69,18 @@ export const TextInput = ({
   const wrapperRef = useRef<HTMLInputElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
 
+  // Trimming here would eat the spaces as they are typed: this input is
+  // controlled, so the trimmed value is pushed back into the DOM on each keystroke
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setInternalText(getValue(event.target.value, shouldTrim));
-    onChange?.(getValue(event.target.value, shouldTrim));
+    const targetValue = turnIntoEmptyStringIfWhitespacesOnly(
+      event.target.value,
+    );
+    setInternalText(targetValue);
+    onChange?.(targetValue);
   };
   useEffect(() => {
-    setInternalText(getValue(value, shouldTrim));
-  }, [value, shouldTrim]);
+    setInternalText(turnIntoEmptyStringIfWhitespacesOnly(value));
+  }, [value]);
 
   useRegisterInputEvents({
     focusId: instanceId,
